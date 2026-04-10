@@ -1,0 +1,99 @@
+---
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Analysis on NBA players statistical performance
+#### Dominic DiRe, Blake Lewis, Will Stone
+
+## Introduction
+
+This project explores NBA player and team statistics pulled from the NBA API across 5 seasons (2020-21 season through 2024-25 season). Basketball is a sport with a great tie to statistics, and modern data collection allows us to track how individual players and the league as a whole evolve over time, although it's just 5 seasons. Analysis on this topic can reveal trends in player development, positional changes in the modern NBA, and how elite players separate themselves from the rest of the league. The goal is to visualize league-wide stat distributions and track individual player development over time, with a focus on Luka Doncic, the future face of the NBA. Who we believe might be able to be a good basis to separate the stars from the future hall of famers.
+
+In pursuit of the goal stated above, we will explore the following questions:
+
+1. What does the distribution of key stats (points, rebounds, assists) look like across the league, and how have those distributions shifted across seasons?
+
+2. Which players are the most efficient scorers? How does scoring volume relate to shooting efficiency?
+
+3. How has Luka Doncic developed from season to season across points, assists, rebounds, and shooting percentages?
+
+4. How do Luka's per-game stats compare to league averages each season?
+
+These are the main questions we are looking to answer through the completion of this project. With the findings we will be able to draw meaningful conclusions on player development and league-wide trends in the NBA.
+
+## Data
+
+### Structure
+
+Data was pulled from the NBA Stats API (`stats.nba.com`) using the `nba_api` Python package. The python file was basic but too long and embarrassing to add, if divine intervention strikes we can add it. Player game logs were collected for every regular season game across 5 seasons and aggregated into per-game averages. This produced one CSV per season for league-wide stats.Also there is another separate combined CSV for Luka Doncic spanning all 5 seasons.
+
+**League CSVs** (`league_stats_YYYY-YY.csv`) — one row per player, containing per-game averages for all NBA players in that regular season.
+
+**Luka CSV** (`luka_career_stats.csv`) — one row per season, pulled from the PlayerCareerStats endpoint.
+
+**Columns included:** `PLAYER_ID`, `PLAYER_NAME`, `TEAM_ABBREVIATION`, `GP`, `MIN`, `PTS`, `REB`, `AST`, `STL`, `BLK`, `FG_PCT`, `FG3_PCT`, `FT_PCT`, `TOV`, `PLUS_MINUS`
+
+### Loading
+
+```{r}
+library(tidyverse)
+
+league_2021 <- read_csv("data/league_stats_2020-21.csv")
+league_2022 <- read_csv("data/league_stats_2021-22.csv")
+league_2023 <- read_csv("data/league_stats_2022-23.csv")
+league_2024 <- read_csv("data/league_stats_2023-24.csv")
+league_2025 <- read_csv("data/league_stats_2024-25.csv")
+
+luka <- read_csv("data/luka_career_stats.csv")
+```
+
+### Cleaning
+
+Add a `SEASON` column to each league dataframe, then combine into one master dataframe.
+
+```{r}
+league_2021$SEASON <- "2020-21"
+league_2022$SEASON <- "2021-22"
+league_2023$SEASON <- "2022-23"
+league_2024$SEASON <- "2023-24"
+league_2025$SEASON <- "2024-25"
+
+master <- bind_rows(league_2021, league_2022, league_2023, league_2024, league_2025)
+```
+
+Filter out players with very few games played to remove small sample size players, to avoid unnessasary clogging.
+
+```{r}
+master <- master %>% filter(GP >= 20)
+```
+
+## Analysis
+
+### What does the distribution of key stats look like across the league?
+
+```{r}
+# placeholder
+```
+
+### Which players are the most efficient scorers?
+
+```{r}
+# placeholder
+```
+
+### How has Luka Doncic developed season to season?
+
+```{r}
+# placeholder
+```
+
+### How do Luka's stats compare to league averages each season?
+
+```{r}
+# placeholder
+```
+
+## Conclusion
