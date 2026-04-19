@@ -41,18 +41,18 @@ Data was pulled from the NBA Stats API (`stats.nba.com`) using the `nba_api` Pyt
 ```{r}
 library(tidyverse)
 
-league_2021 <- read_csv("data/league_stats_2020-21.csv")
-league_2022 <- read_csv("data/league_stats_2021-22.csv")
-league_2023 <- read_csv("data/league_stats_2022-23.csv")
-league_2024 <- read_csv("data/league_stats_2023-24.csv")
-league_2025 <- read_csv("data/league_stats_2024-25.csv")
+league_2021 <- read_csv("league_stats_2020-21.csv")
+league_2022 <- read_csv("league_stats_2021-22.csv")
+league_2023 <- read_csv("league_stats_2022-23.csv")
+league_2024 <- read_csv("league_stats_2023-24.csv")
+league_2025 <- read_csv("league_stats_2024-25.csv")
 
-luka <- read_csv("data/luka_career_stats.csv")
+luka <- read_csv("luka_career_stats.csv")
 ```
 
 ### Cleaning
 
-Add a `SEASON` column to each league dataframe, then combine into one master dataframe.
+Since each league CSV covers a single season but contains no season identifier, so we added a `SEASON` column to each dataframe before combining them. Without the column there wouldn't be a way to tell where data came from
 
 ```{r}
 league_2021$SEASON <- "2020-21"
@@ -60,14 +60,59 @@ league_2022$SEASON <- "2021-22"
 league_2023$SEASON <- "2022-23"
 league_2024$SEASON <- "2023-24"
 league_2025$SEASON <- "2024-25"
+```
 
+With the season identifier in place, we combined all 5 dataframes into a single `master` dataframe using `bind_rows`. `left_join` merges datasets horizontally but for this dataset that doesn't make as much sense. So we used `bind_rows`, which stacks datasets vertically. This is appropriate here because all 5 league CSVs share identical columns — they are the same data structure repeated across different seasons. Which makes this process quite easy.
+```{r}
 master <- bind_rows(league_2021, league_2022, league_2023, league_2024, league_2025)
 ```
 
-Filter out players with very few games played to remove small sample size players, to avoid unnessasary clogging.
-
+The raw data includes all players who appeared in at least one regular season game, including players who played only a handful of minutes across a few games. We filtered to players with at least 20 games played to ensure per-game averages are based on a meaningful sample size. Also if we didn't add this we had a player who scored 30 points in a single game appearance would show a 30.0 PPG average and distort league-wide distributions.
 ```{r}
 master <- master %>% filter(GP >= 20)
+```
+
+Problem with the dataset as is, is that the traded players or players who get picked up by multiple team in a season, the player has 2 team rows. This caused a problem a bit later using `pivot_wider`, wher it didn't know what to pick essentially. Now this function is to sort out players with multiple team rows in the same season.
+
+```{r}
+master <- master %>%
+  group_by(PLAYER_ID, PLAYER_NAME, SEASON) %>%
+  summarise(
+    GP = sum(GP),
+    MIN = mean(MIN),
+    PTS = mean(PTS),
+    REB = mean(REB),
+    AST = mean(AST),
+    STL = mean(STL),
+    BLK = mean(BLK),
+    FG_PCT = mean(FG_PCT, na.rm = TRUE),
+    FG3_PCT = mean(FG3_PCT, na.rm = TRUE),
+    FT_PCT = mean(FT_PCT, na.rm = TRUE),
+    TOV = mean(TOV),
+    PLUS_MINUS = mean(PLUS_MINUS),
+    .groups    = "drop"
+  )
+```
+
+
+The `master` dataframe is in "long format", where each player has one row per season. This structure is wpuld be good for league-wide distributions and filtering by season. However, for comparing the same player's stats side by side across multiple seasons, we also opted for creating a "wide format" dataframe using `pivot_wider`. In `master_wide`, each player occupies a single row and each stat gets its own column per season, such as `PTS_2020-21` and `PTS_2021-22`. Players who did not appear in a given season will have `NA` for that season's columns, newer rookies and retirees.
+
+```{r, warning=FALSE, message=FALSE}
+master_wide <- master %>%
+  select(PLAYER_ID, PLAYER_NAME, SEASON, PTS, REB, AST, STL, BLK,
+         FG_PCT, FG3_PCT, FT_PCT, TOV, PLUS_MINUS) %>%
+  pivot_wider(
+    names_from  = SEASON,
+    values_from = c(PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_PCT, TOV, PLUS_MINUS),
+    names_glue  = "{.value}_{SEASON}"
+  )
+```
+
+From `master_wide` we derived a `PTS_growth` column by subtracting a player's 2020-21 scoring average from their 2024-25 average, this is work in progress so fat but the idea is there. This gives us a simple stat to identify which players improved the most in scoring over the full 5 year span. Players with `NA` in either season, meaning they did not meet the games played threshold in one of those years, will have `NA` for `PTS_growth` as well.
+
+```{r, warning=FALSE, message=FALSE}
+master_wide <- master_wide %>%
+  mutate(PTS_growth = `PTS_2024-25` - `PTS_2020-21`)
 ```
 
 ## Analysis
