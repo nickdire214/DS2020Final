@@ -27,10 +27,24 @@ questions:
 2.  Which players are the most efficient scorers? How does scoring
     volume relate to shooting efficiency?
 
-3.  How has Luka Doncic developed from season to season across points,
+3.  Who are the top 10 scorers, rebounders, and assisters each season,
+    and how much turnover is there in those lists year over year?
+
+4.  How has the league’s reliance on the three-point shot changed across
+    the 5 seasons?
+
+5.  Is there a relationship between minutes played and points per game?
+
+6.  Which players have the best plus/minus relative to their scoring
+    load — who is impacting winning beyond just putting up points?
+
+7.  Which non-Luka players showed the most improvement in scoring from
+    2020-21 to 2024-25? Who regressed the most?
+
+8.  How has Luka Doncic developed from season to season across points,
     assists, rebounds, and shooting percentages?
 
-4.  How do Luka’s per-game stats compare to league averages each season?
+9.  How do Luka’s per-game stats compare to league averages each season?
 
 These are the main questions we are looking to answer through the
 completion of this project. With the findings we will be able to draw
@@ -63,98 +77,17 @@ the PlayerCareerStats endpoint.
 
 ``` r
 library(tidyverse)
-```
 
-    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.2.0     ✔ readr     2.1.6
-    ## ✔ forcats   1.0.1     ✔ stringr   1.6.0
-    ## ✔ ggplot2   4.0.2     ✔ tibble    3.3.1
-    ## ✔ lubridate 1.9.4     ✔ tidyr     1.3.2
-    ## ✔ purrr     1.2.1     
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
-
-``` r
 league_2021 <- read_csv("league_stats_2020-21.csv")
-```
-
-    ## Rows: 626 Columns: 15
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (2): PLAYER_NAME, TEAM_ABBREVIATION
-    ## dbl (13): PLAYER_ID, GP, MIN, PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_P...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
 league_2022 <- read_csv("league_stats_2021-22.csv")
-```
-
-    ## Rows: 715 Columns: 15
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (2): PLAYER_NAME, TEAM_ABBREVIATION
-    ## dbl (13): PLAYER_ID, GP, MIN, PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_P...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
 league_2023 <- read_csv("league_stats_2022-23.csv")
-```
-
-    ## Rows: 609 Columns: 15
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (2): PLAYER_NAME, TEAM_ABBREVIATION
-    ## dbl (13): PLAYER_ID, GP, MIN, PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_P...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
 league_2024 <- read_csv("league_stats_2023-24.csv")
-```
-
-    ## Rows: 657 Columns: 15
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (2): PLAYER_NAME, TEAM_ABBREVIATION
-    ## dbl (13): PLAYER_ID, GP, MIN, PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_P...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
 league_2025 <- read_csv("league_stats_2024-25.csv")
-```
 
-    ## Rows: 654 Columns: 15
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (2): PLAYER_NAME, TEAM_ABBREVIATION
-    ## dbl (13): PLAYER_ID, GP, MIN, PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_P...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
 luka <- read_csv("luka_career_stats.csv")
 ```
 
-    ## Rows: 7 Columns: 14
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (2): SEASON, TEAM_ABBREVIATION
-    ## dbl (12): PLAYER_AGE, GP, MIN, PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-### Cleaning
+### Merging
 
 Since each league CSV covers a single season but contains no season
 identifier, so we added a `SEASON` column to each dataframe before
@@ -170,15 +103,15 @@ league_2025$SEASON <- "2024-25"
 ```
 
 With the season identifier in place, we combined all 5 dataframes into a
-single `master` dataframe using `bind_rows`. `left_join` merges datasets
-horizontally but for this dataset that doesn’t make as much sense. So we
-used `bind_rows`, which stacks datasets vertically. This is appropriate
-here because all 5 league CSVs share identical columns — they are the
-same data structure repeated across different seasons. Which makes this
-process quite easy.
+single `df1` (later is `master`) dataframe using `bind_rows`.
+`left_join` merges datasets horizontally but for this dataset that
+doesn’t make as much sense. So we used `bind_rows`, which stacks
+datasets vertically. This is appropriate here because all 5 league CSVs
+share identical columns — they are the same data structure repeated
+across different seasons. Which makes this process quite easy.
 
 ``` r
-master <- bind_rows(league_2021, league_2022, league_2023, league_2024, league_2025)
+df1 <- bind_rows(league_2021, league_2022, league_2023, league_2024, league_2025)
 ```
 
 The raw data includes all players who appeared in at least one regular
@@ -187,15 +120,64 @@ across a few games. We filtered to players with at least 20 games played
 to ensure per-game averages are based on a meaningful sample size. Also
 if we didn’t add this we had a player who scored 30 points in a single
 game appearance would show a 30.0 PPG average and distort league-wide
-distributions.
+distributions. Also running this line puts the number of observations
+from 3261 to 2316, so the change it quite noticeable.
 
 ``` r
-master <- master %>% filter(GP >= 20)
+df1 <- df1 %>% filter(GP >= 20)
+```
+
+To ease running the code, we saved the merged and slightly cleaned
+dataset to “master.csv” so you only have to run this line. I know we
+aren’t at all going for efficiency this project but I still feel like
+it’s nice to have.
+
+``` r
+write.csv(df1, "master.csv", row.names = FALSE)
+```
+
+### Variables
+
+- PLAYER_ID: Unique numeric identifier for each player assigned by the
+  NBA.
+- PLAYER_NAME: First Last style full name of player.
+- TEAM_ABBREVIATION: The 3-letter abbreviation of the team the player
+  played for (e.g. DAL, LAL).
+- SEASON: The NBA season the stats were recorded in, in YYYY-YY format
+  (e.g. 2023-24).
+- GP: Games Played, the number of regular season games not including any
+  play-ins or playoffs.
+- MIN: Minutes Per Game, the average minutes for that player per game.
+- PTS: Points Per Game, the average points for that player per game.
+- REB: Rebounds Per Game, the average number of total rebounds
+  (offensive and defensive grouped) per game.
+- AST: Assists Per Game, the average assists for that player per game.
+- STL: Steals Per Game, the average steals for that player per game.
+- BLK: Blocks Per Game, the average blocks for that player per game.
+- FG_PCT: Field Goal Percentage, the share of all field goal attempts
+  that were made by player, expressed as a decimal between 0 and 1.
+- FG3_PCT: Three-Point Percentage, the share of three-point attempts
+  that were made by player, expressed as a decimal between 0 and 1.
+- FT_PCT: Free Throw Percentage, the share of free throw attempts that
+  were made by player, expressed as a decimal between 0 and 1.
+- TOV: Turnovers Per Game, the average turnovers for that player per
+  game.
+- PLUS_MINUS: The average point differential for the player’s team while
+  they were on the court.
+
+### Cleaning
+
+First, read the master.
+
+``` r
+library(readr)
+library(tidyverse)
+master <- read_csv('master.csv')
 ```
 
 Problem with the dataset as is, is that the traded players or players
 who get picked up by multiple team in a season, the player has 2 team
-rows. This caused a problem a bit later using `pivot_wider`, wher it
+rows. This caused a problem a bit later using `pivot_wider`, where it
 didn’t know what to pick essentially. Now this function is to sort out
 players with multiple team rows in the same season.
 
@@ -215,7 +197,7 @@ master <- master %>%
     FT_PCT = mean(FT_PCT, na.rm = TRUE),
     TOV = mean(TOV),
     PLUS_MINUS = mean(PLUS_MINUS),
-    .groups    = "drop"
+    .groups = "drop"
   )
 ```
 
@@ -240,9 +222,9 @@ master_wide <- master %>%
   )
 ```
 
-From `master_wide` we derived a `PTS_growth` column by subtracting a
+From `master_wide` we got a `PTS_growth` column by subtracting a
 player’s 2020-21 scoring average from their 2024-25 average, this is
-work in progress so fat but the idea is there. This gives us a simple
+work in progress so far but the idea is there. This gives us a simple
 stat to identify which players improved the most in scoring over the
 full 5 year span. Players with `NA` in either season, meaning they did
 not meet the games played threshold in one of those years, will have
@@ -257,11 +239,82 @@ master_wide <- master_wide %>%
 
 ### What does the distribution of key stats look like across the league?
 
+To kick off the exploration and analysis, the scoring distribution is
+probably what people would first think of showing. The scoring
+distribution of the most recent season will set a good sort-of baseline
+for the shape of the league in scoring. The distribution is
+right-skewed. Meaning the majority of players are role players and not
+stars, not surprising but notable. Then you can see the high volume
+scorers on the right
+
+``` r
+master %>%
+  filter(SEASON == "2024-25") %>%
+  ggplot(aes(x = PTS)) +
+  geom_histogram(binwidth = 1, fill = "blue", color = "white") +
+  labs(title = "Distribution of points per game (ppg) — 2024-25",
+       x = "Points per game (ppg)", y = "Number of players")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+Now that a baseline is set for ppg, we are going to look at the 3 key
+stats over all 5 seasons. The 3 stats being points, assists, and
+rebounds. We use `facet_wrap` to compare the shapes of the points,
+rebounds, and assists distributions side by side. So you can see how
+production of the key stats is changed between the seasons.
+
+Originally we tried to use a histogram, but wow was that a little hard
+to read. It looked nice and we wanted to keep consistency from the
+histogram from above, but we decided a boxplot is going to look much
+prettier. And I think we were right, any sane data science or stats
+major should be foaming at the mouth looking at these.
+
+``` r
+master %>%
+  select(PLAYER_NAME, SEASON, PTS, REB, AST) %>%
+  pivot_longer(cols = c(PTS, REB, AST), names_to = "stat", values_to = "value") %>% # tech
+  ggplot(aes(x = SEASON, y = value, fill = SEASON)) +
+  geom_boxplot() +
+  facet_wrap(~ stat, scales = "free_y") + # TECH, also so each avg diff y
+  labs(title = "Distribution of points, assists, rebounds by season",
+       x = "Season", y = "Per game averages", fill = "Season") +
+  theme(axis.text.x = element_blank()) # was overcrowding, would be fine if no facet_wrap
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+### Which players are the most efficient scorers?
+
 ``` r
 # placeholder
 ```
 
-### Which players are the most efficient scorers?
+### Who are the top 10 scorers, rebounders, and assisters each season?
+
+``` r
+# placeholder
+```
+
+### How has the league’s reliance on the three-point shot changed?
+
+``` r
+# placeholder
+```
+
+### Is there a relationship between minutes played and points per game?
+
+``` r
+# placeholder
+```
+
+### Which players have the best plus/minus relative to their scoring load?
+
+``` r
+# placeholder
+```
+
+### Which players improved or regressed the most in scoring?
 
 ``` r
 # placeholder
