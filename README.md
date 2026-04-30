@@ -304,9 +304,53 @@ master %>%
 
 ### Is there a relationship between minutes played and points per game?
 
+It’s pretty natural to think that if a player gets more minutes, they
+will get more opportunity to score. We wanted to look if players had
+more minutes, they would generally score more than people who didn’t,
+and take notes of outliers. We made a scatterplot that looks at all the
+seasons in our dataset with a trend line to see if minutes per game can
+actually predict points scored in a game. Players who score higher than
+30 points per game will be labeled differently, marked as red dots. We
+originally labeled names but it just looks too cluttered, and if we
+forced them not to overlap a top of names went unseen.
+
 ``` r
-# placeholder
+master %>%
+  mutate(elite = PTS > 25) %>%
+  ggplot(aes(x = MIN, y = PTS, color = elite)) +
+  geom_point(alpha = 0.3) +
+  scale_color_manual(values = c("FALSE" = "blue", "TRUE" = "red"),
+                     labels = c("FALSE" = "Under 25 PPG", "TRUE" = "25+ PPG")) +
+  geom_smooth(method = "lm", color = "black") + # for straight line
+  labs(title = "Minutes per game vs points per game for all 2020-2025 seasons",
+       x = "Minutes per game", y = "Points per game")
 ```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- --> Another cool
+thing to look at is the specifics of the correlation of the two
+variables minutes and points. r = .87 which is a pretty strong
+correlation, as well as the p value being extremely small. So there is
+overwheling evidence that the minutes and points variables are
+correlated.
+
+``` r
+cor_test <- cor.test(master$MIN, master$PTS)
+cor_test
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  master$MIN and master$PTS
+    ## t = 83.017, df = 2179, p-value < 2.2e-16
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  0.8611883 0.8813805
+    ## sample estimates:
+    ##       cor 
+    ## 0.8716538
 
 ### Which players have the best plus/minus relative to their scoring load?
 
