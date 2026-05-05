@@ -401,9 +401,41 @@ master %>%
 
 ### Which players improved or regressed the most in scoring?
 
+Using the `master_wide` and the `PTS_growth` made weeks ago, we can
+identify the players that made the biggest jumps, and biggest drops in
+scoring from 2020 to 2025. This only includes players that were in the
+2020-21 seasons and the 2024-25 season. So it shows players that didn’t
+just grow from 1 pt scored to 8 from 2023 season to the 2024 season and
+highlight them as the next coming of Jordan. But this also means that
+recent rookies and players that retired are excluded.
+
 ``` r
-# placeholder
+master_wide %>%
+  filter(!is.na(PTS_growth)) %>%
+  slice_max(PTS_growth, n = 10) %>%
+  ggplot(aes(x = reorder(PLAYER_NAME, PTS_growth), y = PTS_growth)) +
+  geom_col(fill = "skyblue") +
+  coord_flip() +
+  labs(title = "Top 10 most improved scorers",
+       subtitle = "2020-21 to 2024-25",
+       x = "", y = "Points per game growth")
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+``` r
+master_wide %>%
+  filter(!is.na(PTS_growth)) %>%
+  slice_min(PTS_growth, n = 10) %>%
+  ggplot(aes(x = reorder(PLAYER_NAME, -PTS_growth), y = PTS_growth)) +
+  geom_col(fill = "tomato") +
+  coord_flip() +
+  labs(title = "Top 10 most regressed scorers",
+       subtitle = "2020-21 to 2024-25",
+       x = "", y = "Points per game growth")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ### How has Luka Doncic developed season to season?
 
