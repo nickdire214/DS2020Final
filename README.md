@@ -38,13 +38,13 @@ questions:
 6.  Which players have the best plus/minus relative to their scoring
     load — who is impacting winning beyond just putting up points?
 
-7.  Which non-Luka players showed the most improvement in scoring from
-    2020-21 to 2024-25? Who regressed the most?
+7.  Which players improved or regressed the most in scoring?
 
 8.  How has Luka Doncic developed from season to season across points,
     assists, rebounds, and shooting percentages?
 
 9.  How do Luka’s per-game stats compare to league averages each season?
+    How about compared to the MVP’s of those seasons?
 
 These are the main questions we are looking to answer through the
 completion of this project. With the findings we will be able to draw
@@ -354,9 +354,50 @@ cor_test
 
 ### Which players have the best plus/minus relative to their scoring load?
 
+Plus/minus is a player’s way of impacting the game without their stats,
+so esentially how many points the team scores and lets up when they are
+on the floor. It’s a great indicator to tell the story of players who
+don’t score a ton, but are amazing on defense or playmaking,
+contributing greatly to their teams winning.The scatterplot below shows
+point per game against plus/minus for 2024-25. Horizontal base line at 0
+to split the good and bad plus/minus. The upper left of the graph are
+players with less scoring, but good plus minus. And the top right is the
+true outliers of basketball. So this is essentially capturing players
+with a sort of hidden value.
+
 ``` r
-# placeholder
+# install.packages("ggrepel")
+library(ggrepel) # found easier package to label, might need to install to run
 ```
+
+    ## Warning: package 'ggrepel' was built under R version 4.5.3
+
+``` r
+master %>%
+  filter(SEASON == "2024-25") %>%
+  mutate(highlight = case_when(
+    PLUS_MINUS > 5 & PTS < 12 ~ "High PM, low scoring",
+    PLUS_MINUS > 8 & PTS > 20 ~ "High PM, high scoring",
+    TRUE ~ "Non-outliers" # default
+  )) %>%
+  ggplot(aes(x = PTS, y = PLUS_MINUS, color = highlight)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_text_repel(
+    data = . %>% filter(highlight != "Non-outliers"), # otherwise everyone highlighted
+    aes(label = PLAYER_NAME),
+    size = 2.5, show.legend = FALSE
+  ) +
+  scale_color_manual(values = c(
+    "Non-outliers" = "violet",
+    "High PM, low scoring" = "red",
+    "High PM, high scoring" = "black"
+  )) +
+  labs(title = "Points per game vs Plus/Minus — 2024-25 season",
+       x = "Points per game", y = "Plus/Minus")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ### Which players improved or regressed the most in scoring?
 
@@ -370,7 +411,7 @@ cor_test
 # placeholder
 ```
 
-### How do Luka’s stats compare to league averages each season?
+### How do Luka’s stats compare to league averages each season? How about compared to the MVP’s of those seasons?
 
 ``` r
 # placeholder
