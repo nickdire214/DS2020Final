@@ -216,9 +216,9 @@ master_wide <- master %>%
   select(PLAYER_ID, PLAYER_NAME, SEASON, PTS, REB, AST, STL, BLK,
          FG_PCT, FG3_PCT, FT_PCT, TOV, PLUS_MINUS) %>%
   pivot_wider(
-    names_from  = SEASON,
+    names_from = SEASON,
     values_from = c(PTS, REB, AST, STL, BLK, FG_PCT, FG3_PCT, FT_PCT, TOV, PLUS_MINUS),
-    names_glue  = "{.value}_{SEASON}"
+    names_glue = "{.value}_{SEASON}"
   )
 ```
 
@@ -310,7 +310,7 @@ more minutes, they would generally score more than people who didn’t,
 and take notes of outliers. We made a scatterplot that looks at all the
 seasons in our dataset with a trend line to see if minutes per game can
 actually predict points scored in a game. Players who score higher than
-30 points per game will be labeled differently, marked as red dots. We
+25 points per game will be labeled differently, marked as red dots. We
 originally labeled names but it just looks too cluttered, and if we
 forced them not to overlap a top of names went unseen.
 
@@ -382,7 +382,7 @@ master %>%
   )) %>%
   ggplot(aes(x = PTS, y = PLUS_MINUS, color = highlight)) +
   geom_point(alpha = 0.5) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   geom_text_repel(
     data = . %>% filter(highlight != "Non-outliers"), # otherwise everyone highlighted
     aes(label = PLAYER_NAME),
@@ -397,7 +397,29 @@ master %>%
        x = "Points per game", y = "Plus/Minus")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- --> To
+complement the single season view, this bar chart below shows the top 10
+individual plus/minus performances across all 5 seasons with an
+asterisk. Each bar is colored by season, highlighting peak impact
+contributers. Jokic actually had 3 seasons that could make it on this
+graph, (22-23, 23-24, 24-25), but for sake of top 10 players we edited
+the conditions for making it using `with_ties`.
+
+``` r
+master %>%
+  group_by(PLAYER_NAME) %>%
+  slice_max(PLUS_MINUS, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  slice_max(PLUS_MINUS, n = 10, with_ties = FALSE) %>%
+  ggplot(aes(x = reorder(PLAYER_NAME, PLUS_MINUS), y = PLUS_MINUS, fill = SEASON)) +
+  geom_col() +
+  coord_flip() + # looks so much cooler like this
+  labs(title = "Top 10 single season Plus/Minus performances",
+       subtitle = "Across all 5 seasons",
+       x = "", y = "Plus/Minus", fill = "Season")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ### Which players improved or regressed the most in scoring?
 
@@ -421,7 +443,7 @@ master_wide %>%
        x = "", y = "Points per game growth")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 master_wide %>%
@@ -435,7 +457,31 @@ master_wide %>%
        x = "", y = "Points per game growth")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+The scatter below plots every player’s 2020-21 scoring average against
+their 2024-25 average. Players above the diagonal line improved, players
+below it regressed. This tells a much better story than just the top and
+bottom 10, showing the full picture of how scoring output shifted across
+the league over 5 seasons and pointing out the outliers.
+
+``` r
+master_wide %>%
+  filter(!is.na(PTS_growth)) %>%
+  ggplot(aes(x = `PTS_2020-21`, y = `PTS_2024-25`)) +
+  geom_point(alpha = 0.4, color = "blue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "black") + # sloped line
+  geom_text(
+    data = . %>% filter(PTS_growth > 10 | PTS_growth < -8),
+    aes(label = PLAYER_NAME),
+    size = 2.5, vjust = -0.5, check_overlap = TRUE
+  ) +
+  labs(title = "Scoring Average: 2020-21 vs 2024-25",
+       subtitle = "Players above the line improved, below regressed",
+       x = "Points per game 2020-21", y = "Points per game 2024-25")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ### How has Luka Doncic developed season to season?
 
