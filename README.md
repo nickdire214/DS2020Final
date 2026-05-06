@@ -531,6 +531,37 @@ master_wide %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
+### BLAKE PLEASE EDIT THIS I THINK PUTTING LUKA HERE WOULD BE GREAT
+
+We define stars as players in the 90th percentile of scoring each
+season. The difference over time of the heights of the points would
+suggest the elite are pulling further away from the rest of the league.
+
+``` r
+superstar_vs_avg <- master %>%
+  group_by(SEASON) %>%
+  summarise(
+    league_avg = mean(PTS),
+    superstar_avg = quantile(PTS, 0.90)
+  )
+
+superstar_vs_avg %>%
+  ggplot(aes(x = SEASON)) +
+  geom_line(aes(y = league_avg, group = 1, color = "League avg"), linewidth = 1.2) +
+  geom_line(aes(y = superstar_avg, group = 1, color = "Star (90th percentile)"), linewidth = 1.2) +
+  geom_point(aes(y = league_avg, color = "League Average"), size = 3) +
+  geom_point(aes(y = superstar_avg, color = "Superstar (90th Pct)"), size = 3) +
+  scale_color_manual(values = c(
+    "League avg" = "purple",
+    "Star (90th percentile)" = "green"
+  )) +
+  labs(title = "Stars vs League average scoring by season 2020-2025",
+       subtitle = "Stars defined as 90th percentile scorers each season",
+       x = "Season", y = "Points per game", color = "")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
 ### How has Luka Doncic developed season to season?
 
 ``` r
