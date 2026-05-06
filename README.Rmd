@@ -230,6 +230,32 @@ cor_test <- cor.test(master$MIN, master$PTS)
 cor_test
 ```
 
+We can extend this further by looking at whether heavier minutes also relate to shooting efficiency. Trying to find if fatigue is really a problem or not. The scatterplot plots minutes per game against field goal percentage. Players with high minutes and high FG% are the most durable and efficient players in the league — a rare combination, and don't worry the Don is there somewhere.
+
+```{r}
+master %>%
+  filter(FG_PCT > 0.1) %>%
+  mutate(highlight = case_when(
+    MIN > 30 & FG_PCT > 0.52 ~ "High Min, High FG%",
+    MIN > 30 & FG_PCT < 0.42 ~ "High Min, Low FG%",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(x = MIN, y = FG_PCT, color = highlight)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  scale_color_manual(values = c(
+    "Other" = "gray",
+    "High Min, High FG%" = "purple",
+    "High Min, Low FG%" = "green"
+  )) +
+  labs(title = "Minutes per Game vs FG%",
+       x = "Minutes per game", y = "FG%", color = "")
+```
+
+```{r}
+cor_test2 <- cor.test(master$MIN, master$FG_PCT)
+cor_test2
+```
 
 ### Which players have the best plus/minus relative to their scoring load?
 

@@ -352,6 +352,54 @@ cor_test
     ##       cor 
     ## 0.8716538
 
+We can extend this further by looking at whether heavier minutes also
+relate to shooting efficiency. Trying to find if fatigue is really a
+problem or not. The scatterplot plots minutes per game against field
+goal percentage. Players with high minutes and high FG% are the most
+durable and efficient players in the league — a rare combination, and
+don’t worry the Don is there somewhere.
+
+``` r
+master %>%
+  filter(FG_PCT > 0.1) %>%
+  mutate(highlight = case_when(
+    MIN > 30 & FG_PCT > 0.52 ~ "High Min, High FG%",
+    MIN > 30 & FG_PCT < 0.42 ~ "High Min, Low FG%",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(x = MIN, y = FG_PCT, color = highlight)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  scale_color_manual(values = c(
+    "Other" = "gray",
+    "High Min, High FG%" = "purple",
+    "High Min, Low FG%" = "green"
+  )) +
+  labs(title = "Minutes per Game vs FG%",
+       x = "Minutes per game", y = "FG%", color = "")
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+``` r
+cor_test2 <- cor.test(master$MIN, master$FG_PCT)
+cor_test2
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  master$MIN and master$FG_PCT
+    ## t = 25.756, df = 2179, p-value < 2.2e-16
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  0.4502574 0.5146372
+    ## sample estimates:
+    ##    cor 
+    ## 0.4831
+
 ### Which players have the best plus/minus relative to their scoring load?
 
 Plus/minus is a player’s way of impacting the game without their stats,
@@ -397,7 +445,7 @@ master %>%
        x = "Points per game", y = "Plus/Minus")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- --> To
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- --> To
 complement the single season view, this bar chart below shows the top 10
 individual plus/minus performances across all 5 seasons with an
 asterisk. Each bar is colored by season, highlighting peak impact
@@ -419,7 +467,7 @@ master %>%
        x = "", y = "Plus/Minus", fill = "Season")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ### Which players improved or regressed the most in scoring?
 
@@ -443,7 +491,7 @@ master_wide %>%
        x = "", y = "Points per game growth")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ``` r
 master_wide %>%
@@ -457,7 +505,7 @@ master_wide %>%
        x = "", y = "Points per game growth")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 The scatter below plots every player’s 2020-21 scoring average against
 their 2024-25 average. Players above the diagonal line improved, players
@@ -481,7 +529,7 @@ master_wide %>%
        x = "Points per game 2020-21", y = "Points per game 2024-25")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ### How has Luka Doncic developed season to season?
 
