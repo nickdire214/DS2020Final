@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-This project explores NBA player and team statistics pulled from the NBA API across 5 seasons (2020-21 season through 2024-25 season). Basketball is a sport with a great tie to statistics, and modern data collection allows us to track how individual players and the league as a whole evolve over time, although it's just 5 seasons. Analysis on this topic can reveal trends in player development, positional changes in the modern NBA, and how elite players separate themselves from the rest of the league. The goal is to visualize league-wide stat distributions and track individual player development over time, with a focus on Luka Doncic, the future face of the NBA. Who we believe might be able to be a good basis to separate the stars from the future hall of famers.
+This project explores NBA player and team statistics pulled from the NBA API across 5 seasons (2020-21 season through 2024-25 season). Basketball is a sport with a great tie to statistics, and modern data collection allows us to track how individual players and the league as a whole evolve over time, although it's just 5 seasons. Analysis on this topic can reveal trends in player development, positional changes in the modern NBA, and how elite players separate themselves from the rest of the league. The goal is to visualize league-wide stat distributions and track individual player development over time, with a focus on Luka Dončić, the future face of the NBA. Who we believe might be able to be a good basis to separate the stars from the future hall of famers.
 
 In pursuit of the goal stated above, we will explore the following questions:
 
@@ -28,7 +28,7 @@ In pursuit of the goal stated above, we will explore the following questions:
 
 7. Which players improved or regressed the most in scoring?
 
-8. How has Luka Doncic developed from season to season across points, assists, rebounds, and shooting percentages?
+8. How has Luka Dončić developed from season to season across points, assists, rebounds, and shooting percentages?
 
 9. How do Luka's per-game stats compare to league averages each season? How about compared to the MVP's of those seasons?
 
@@ -38,7 +38,7 @@ These are the main questions we are looking to answer through the completion of 
 
 ### Structure
 
-Data was pulled from the NBA Stats API (`stats.nba.com`) using the `nba_api` Python package. The python file was basic but too long and embarrassing to add, if divine intervention strikes we can add it. Player game logs were collected for every regular season game across 5 seasons and aggregated into per-game averages. This produced one CSV per season for league-wide stats.Also there is another separate combined CSV for Luka Doncic spanning all 5 seasons.
+Data was pulled from the NBA Stats API (`stats.nba.com`) using the `nba_api` Python package. The python file was basic but too long and embarrassing to add, if divine intervention strikes we can add it. Player game logs were collected for every regular season game across 5 seasons and aggregated into per-game averages. This produced one CSV per season for league-wide stats. Also there is another separate combined CSV for Luka Dončić spanning all 5 seasons.
 
 **League CSVs** (`league_stats_YYYY-YY.csv`) — one row per player, containing per-game averages for all NBA players in that regular season.
 
@@ -139,7 +139,7 @@ master <- master %>%
 ```
 
 
-The `master` dataframe is in "long format", where each player has one row per season. This structure is wpuld be good for league-wide distributions and filtering by season. However, for comparing the same player's stats side by side across multiple seasons, we also opted for creating a "wide format" dataframe using `pivot_wider`. In `master_wide`, each player occupies a single row and each stat gets its own column per season, such as `PTS_2020-21` and `PTS_2021-22`. Players who did not appear in a given season will have `NA` for that season's columns, newer rookies and retirees.
+The `master` dataframe is in "long format", where each player has one row per season. This structure is would be good for league-wide distributions and filtering by season. However, for comparing the same player's stats side by side across multiple seasons, we also opted for creating a "wide format" dataframe using `pivot_wider`. In `master_wide`, each player occupies a single row and each stat gets its own column per season, such as `PTS_2020-21` and `PTS_2021-22`. Players who did not appear in a given season will have `NA` for that season's columns, newer rookies and retirees.
 
 ```{r, warning=FALSE, message=FALSE}
 master_wide <- master %>%
@@ -192,8 +192,32 @@ master %>%
 
 ### Which players are the most efficient scorers?
 
+First we must answer the question of what makes an "efficient" scorer, these are players who score the most points while maintaining high shooting percentages. We can filter out the players with less than 15 points per game since we're looking for those most efficient. We have thrown in Luka Dončić as well for frame of reference for greatness.
+
 ```{r}
-# placeholder
+library(ggrepel) 
+
+master %>%
+  filter(PTS >= 15) %>%
+  mutate(highlight = case_when(
+    PLAYER_NAME == "Luka Dončić" ~ "Luka Dončić",
+    PTS > 25 & FG_PCT > 0.50 ~ "Elite volume and efficiency",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(x = FG_PCT, y = PTS, color = highlight)) +
+  geom_point(alpha = 0.5) +
+  geom_text_repel(
+    data = . %>% filter(highlight != "Other"), 
+    aes(label = PLAYER_NAME),
+    size = 3, show.legend = FALSE, max.overlaps = 10
+  ) +
+  scale_color_manual(values = c(
+    "Other" = "gray",
+    "Elite volume and efficiency" = "red",
+    "Luka Dončić" = "blue"
+  )) +
+  labs(title = "Points per game vs Field Goal Percentage — 2020-2025",
+       x = "Field Goal Percentage", y = "Points per game")
 ```
 
 ### Who are the top 10 scorers, rebounders, and assisters each season?
