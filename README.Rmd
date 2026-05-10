@@ -444,7 +444,7 @@ ggplot(luka_clean, aes(x = SEASON)) +
     "Rebounds" = "orange", 
     "Assists" = "green", 
     "Steals" = "red",
-    "FG % (x100)"
+    "FG % (x100)" = "grey"
   )) +
   labs(
     title = "Luka Dončić: Stats over time",
