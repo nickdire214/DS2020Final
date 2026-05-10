@@ -411,7 +411,35 @@ superstar_vs_avg %>%
 ### How has Luka Doncic developed season to season?
 
 ```{r}
-# placeholder
+ggplot(luka, aes(x = SEASON)) +
+  
+  # pts
+  geom_line(aes(y = PTS, group = 1, color = "Points"), linewidth = 1.2) +
+  geom_point(aes(y = PTS, color = "Points"), size = 3) +
+  
+  # rb
+  geom_line(aes(y = REB, group = 1, color = "Rebounds"), linewidth = 1.2) +
+  geom_point(aes(y = REB, color = "Rebounds"), size = 3) +
+  
+  # ast
+  geom_line(aes(y = AST, group = 1, color = "Assists"), linewidth = 1.2) +
+  geom_point(aes(y = AST, color = "Assists"), size = 3) +
+  
+  # stl
+  geom_line(aes(y = STL, group = 1, color = "Steals"), linewidth = 1.2) +
+  geom_point(aes(y = STL, color = "Steals"), size = 3) +
+  
+  scale_color_manual(values = c(
+    "Points" = "blue", 
+    "Rebounds" = "orange", 
+    "Assists" = "green", 
+    "Steals" = "red"
+  )) +
+  labs(
+    title = "Luka Dončić: Stats over time",
+    y = "Average Per Game",
+    color = "Stat"
+  )
 ```
 
 ### How do Luka's stats compare to league averages each season? How about compared to the MVP's of those seasons?
