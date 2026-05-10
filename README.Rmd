@@ -456,7 +456,48 @@ ggplot(luka_clean, aes(x = SEASON)) +
 ### How do Luka's stats compare to league averages each season? How about compared to the MVP's of those seasons?
 
 ```{r}
-# placeholder
+league_avg <- master %>%
+  group_by(SEASON) %>%
+  summarise(across(c(PTS, REB, AST, STL, FG_PCT), mean, na.rm = TRUE)) %>%
+  pivot_longer(cols = -SEASON, names_to = "Metric", values_to = "Value") %>%
+  mutate(Source = "League Average")
+
+# MVP line from master set
+mvp_data <- master %>%
+  filter(
+    (PLAYER_NAME == "Nikola Jokić" & SEASON %in% c("2020-21", "2021-22", "2023-24")) |
+    (PLAYER_NAME == "Joel Embiid" & SEASON == "2022-23") |
+    (PLAYER_NAME == "Shai Gilgeous-Alexander" & SEASON == "2024-25")
+  ) %>%
+  select(SEASON, PTS, REB, AST, STL, FG_PCT) %>%
+  pivot_longer(cols = -SEASON, names_to = "Metric", values_to = "Value") %>%
+  mutate(Source = "Season MVP")
+
+# Luka from his dataset (TOT row)
+luka_data <- luka %>%
+  filter(TEAM_ABBREVIATION == "TOT" | SEASON != "2024-25") %>%
+  select(SEASON, PTS, REB, AST, STL, FG_PCT) %>%
+  pivot_longer(cols = -SEASON, names_to = "Metric", values_to = "Value") %>%
+  mutate(Source = "Luka Doncic")
+
+# combining data and plotting
+all_stats <- bind_rows(league_avg, mvp_data, luka_data)
+
+ggplot(all_stats, aes(x = SEASON, y = Value, group = Source, color = Source)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  facet_wrap(~Metric, scales = "free_y") +
+  scale_x_discrete(labels = c(
+    "2020-21" = "21'", 
+    "2021-22" = "22'", 
+    "2022-23" = "23'", 
+    "2023-24" = "24'", 
+    "2024-25" = "25'"
+  )) +
+  scale_color_manual(values = c("gray", "blue", "gold"))+
+  labs(title = "Luka vs. League Average vs. MVPs", y = "Stat Value")
 ```
+## Luka takes a lot of very difficult 3 point shots by himself to try and save the offense, this makes his FG_PCT appear weaker than it is. Otherwise, he is consistently playing at an MVP level and getting ROBBED
+
 
 ## Conclusion
