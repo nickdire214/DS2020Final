@@ -411,7 +411,12 @@ superstar_vs_avg %>%
 ### How has Luka Doncic developed season to season?
 
 ```{r}
-ggplot(luka, aes(x = SEASON)) +
+### goat switched teams, using TOT row only for 24-25 season
+
+luka_clean <- luka %>%
+  filter(!(SEASON == "2024-25" & TEAM_ABBREVIATION %in% c("DAL", "LAL")))
+
+ggplot(luka_clean, aes(x = SEASON)) +
   
   # pts
   geom_line(aes(y = PTS, group = 1, color = "Points"), linewidth = 1.2) +
@@ -429,11 +434,17 @@ ggplot(luka, aes(x = SEASON)) +
   geom_line(aes(y = STL, group = 1, color = "Steals"), linewidth = 1.2) +
   geom_point(aes(y = STL, color = "Steals"), size = 3) +
   
+  # fg %
+  geom_line(aes(y = FG_PCT * 100, group = 1, color = "FG % (x100)"), 
+            linewidth = 1.2) +
+  geom_point(aes(y = FG_PCT * 100, color = "FG % (x100)"), size = 3) +
+  
   scale_color_manual(values = c(
     "Points" = "blue", 
     "Rebounds" = "orange", 
     "Assists" = "green", 
-    "Steals" = "red"
+    "Steals" = "red",
+    "FG % (x100)"
   )) +
   labs(
     title = "Luka Dončić: Stats over time",
