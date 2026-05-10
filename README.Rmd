@@ -394,9 +394,13 @@ superstar_vs_avg %>%
   geom_line(aes(y = superstar_avg, group = 1, color = "Star (90th percentile)"), linewidth = 1.2) +
   geom_point(aes(y = league_avg, color = "League Average"), size = 3) +
   geom_point(aes(y = superstar_avg, color = "Superstar (90th Pct)"), size = 3) +
+  geom_line(data = luka, aes(y = PTS, group = 1, color = "Luka Dončić"), linewidth = 1.2) +
+  geom_point(data = luka, aes(y = PTS, color = "Luka Dončić", size = 3)) +
   scale_color_manual(values = c(
     "League avg" = "purple",
-    "Star (90th percentile)" = "green"
+    "Star (90th percentile)" = "green",
+     "Luka Dončić" = "blue"
+
   )) +
   labs(title = "Stars vs League average scoring by season 2020-2025",
        subtitle = "Stars defined as 90th percentile scorers each season",
