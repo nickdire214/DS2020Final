@@ -14,7 +14,7 @@ can reveal trends in player development, positional changes in the
 modern NBA, and how elite players separate themselves from the rest of
 the league. The goal is to visualize league-wide stat distributions and
 track individual player development over time, with a focus on Luka
-Doncic, the future face of the NBA. Who we believe might be able to be a
+Dončić, the future face of the NBA. Who we believe might be able to be a
 good basis to separate the stars from the future hall of famers.
 
 In pursuit of the goal stated above, we will explore the following
@@ -27,7 +27,7 @@ questions:
 2.  Which players are the most efficient scorers? How does scoring
     volume relate to shooting efficiency?
 
-3.  Who are the top 10 scorers, rebounders, and assisters each season,
+3.  Who are the top 5 scorers, rebounders, and assisters each season,
     and how much turnover is there in those lists year over year?
 
 4.  How has the league’s reliance on the three-point shot changed across
@@ -40,7 +40,7 @@ questions:
 
 7.  Which players improved or regressed the most in scoring?
 
-8.  How has Luka Doncic developed from season to season across points,
+8.  How has Luka Dončić developed from season to season across points,
     assists, rebounds, and shooting percentages?
 
 9.  How do Luka’s per-game stats compare to league averages each season?
@@ -60,8 +60,8 @@ Data was pulled from the NBA Stats API (`stats.nba.com`) using the
 embarrassing to add, if divine intervention strikes we can add it.
 Player game logs were collected for every regular season game across 5
 seasons and aggregated into per-game averages. This produced one CSV per
-season for league-wide stats.Also there is another separate combined CSV
-for Luka Doncic spanning all 5 seasons.
+season for league-wide stats. Also there is another separate combined
+CSV for Luka Dončić spanning all 5 seasons.
 
 **League CSVs** (`league_stats_YYYY-YY.csv`) — one row per player,
 containing per-game averages for all NBA players in that regular season.
@@ -202,7 +202,7 @@ master <- master %>%
 ```
 
 The `master` dataframe is in “long format”, where each player has one
-row per season. This structure is wpuld be good for league-wide
+row per season. This structure is would be good for league-wide
 distributions and filtering by season. However, for comparing the same
 player’s stats side by side across multiple seasons, we also opted for
 creating a “wide format” dataframe using `pivot_wider`. In
@@ -286,15 +286,105 @@ master %>%
 
 ### Which players are the most efficient scorers?
 
+First we must answer the question of what makes an “efficient” scorer,
+these are players who score the most points while maintaining high
+shooting percentages. We can filter out the players with less than 15
+points per game since we’re looking for those most efficient. We have
+highlighted Luka Dončić as well for frame of reference for greatness.
+
 ``` r
-# placeholder
+library(ggrepel) 
 ```
 
-### Who are the top 10 scorers, rebounders, and assisters each season?
+    ## Warning: package 'ggrepel' was built under R version 4.5.3
 
 ``` r
-# placeholder
+master %>%
+  filter(PTS >= 15) %>%
+  mutate(highlight = case_when(
+    PLAYER_NAME == "Luka Dončić" ~ "Luka Dončić",
+    PTS > 25 & FG_PCT > 0.50 ~ "High efficiency scorers",
+    TRUE ~ "Other"
+  )) %>%
+  ggplot(aes(x = FG_PCT, y = PTS, color = highlight)) +
+  geom_point(alpha = 0.5) +
+  geom_text_repel(
+    data = . %>% filter(highlight != "Other"), 
+    aes(label = PLAYER_NAME),
+    size = 3, show.legend = FALSE, max.overlaps = 10
+  ) +
+  scale_color_manual(values = c(
+    "Other" = "gray",
+    "High efficiency scorers" = "red",
+    "Luka Dončić" = "blue"
+  )) +
+  labs(title = "Points per game vs Field Goal Percentage — 2020-2025",
+       x = "Field Goal Percentage", y = "Points per game")
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+### Who are the top 5 scorers, rebounders, and assisters each season?
+
+We’ve covered who is the most efficient scorers, now we’ll look at the
+top scorers, rebounders, and assisters. We can see Luka, among other
+stars, dominating the points leaderboard which is to be expected, what
+most people don’t know is who is the best of the best for the other
+categories. People like Nikola Jokić and Rudy Gobert are the top players
+for rebounds, while players who have elite assist numbers are Trae
+Young, Nikola Jokić again, and the one and only, Luka Dončić.
+
+``` r
+library(stringr)
+top_pts <- master %>%
+  group_by(SEASON) %>%
+  slice_max(PTS, n = 5, with_ties = FALSE) %>%
+  mutate(Rank = row_number()) %>%
+  ungroup()
+
+ggplot(top_pts, aes(x = SEASON, y = factor(Rank, levels = 5:1), 
+  label = paste0(str_wrap(PLAYER_NAME, width = 12), "\n", round(PTS, 1)))) +
+  geom_tile(fill = "skyblue", color = "white") +
+  geom_text(size = 3.5, fontface = "bold") +
+  labs(title = "Top 5 Scorers Each Season", x = "", y = "Rank") +
+  theme(legend.position = "none", panel.grid = element_blank())
+```
+
+![](README_files/figure-gfm/top_5_basic-1.png)<!-- -->
+
+``` r
+top_reb <- master %>%
+  group_by(SEASON) %>%
+  slice_max(REB, n = 5, with_ties = FALSE) %>%
+  mutate(Rank = row_number()) %>%
+  ungroup()
+
+ggplot(top_reb, aes(x = SEASON, y = factor(Rank, levels = 5:1), 
+  label = paste0(str_wrap(PLAYER_NAME, width = 12), "\n", round(REB, 1)))) +
+  geom_tile(fill = "violet", color = "white") +
+  geom_text(size = 3.5, fontface = "bold") +
+  labs(title = "Top 5 Rebounders Each Season", x = "", y = "Rank") +
+  theme(legend.position = "none", panel.grid = element_blank())
+```
+
+![](README_files/figure-gfm/top_5_basic-2.png)<!-- -->
+
+``` r
+top_ast <- master %>%
+  group_by(SEASON) %>%
+  slice_max(AST, n = 5, with_ties = FALSE) %>%
+  mutate(Rank = row_number()) %>%
+  ungroup()
+
+ggplot(top_ast, aes(x = SEASON, y = factor(Rank, levels = 5:1), 
+  label = paste0(str_wrap(PLAYER_NAME, width = 12), "\n", round(AST, 1)))) +
+  geom_tile(fill = "orange", color = "white") +
+  geom_text(size = 3.5, fontface = "bold") +
+  labs(title = "Top 5 Assisters Each Season", x = "Season", y = "Rank") +
+  theme(legend.position = "none", panel.grid = element_blank())
+```
+
+![](README_files/figure-gfm/top_5_basic-3.png)<!-- -->
 
 ### How has the league’s reliance on the three-point shot changed?
 
@@ -328,7 +418,7 @@ master %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- --> Another cool
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- --> Another cool
 thing to look at is the specifics of the correlation of the two
 variables minutes and points. r = .87 which is a pretty strong
 correlation, as well as the p value being extremely small. So there is
@@ -381,7 +471,7 @@ master %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 cor_test2 <- cor.test(master$MIN, master$FG_PCT)
@@ -416,11 +506,7 @@ with a sort of hidden value.
 ``` r
 # install.packages("ggrepel")
 library(ggrepel) # found easier package to label, might need to install to run
-```
 
-    ## Warning: package 'ggrepel' was built under R version 4.5.3
-
-``` r
 master %>%
   filter(SEASON == "2024-25") %>%
   mutate(highlight = case_when(
@@ -445,7 +531,7 @@ master %>%
        x = "Points per game", y = "Plus/Minus")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- --> To
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- --> To
 complement the single season view, this bar chart below shows the top 10
 individual plus/minus performances across all 5 seasons with an
 asterisk. Each bar is colored by season, highlighting peak impact
@@ -467,7 +553,7 @@ master %>%
        x = "", y = "Plus/Minus", fill = "Season")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ### Which players improved or regressed the most in scoring?
 
@@ -491,7 +577,7 @@ master_wide %>%
        x = "", y = "Points per game growth")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
 master_wide %>%
@@ -505,7 +591,7 @@ master_wide %>%
        x = "", y = "Points per game growth")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 The scatter below plots every player’s 2020-21 scoring average against
 their 2024-25 average. Players above the diagonal line improved, players
@@ -529,7 +615,7 @@ master_wide %>%
        x = "Points per game 2020-21", y = "Points per game 2024-25")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ### BLAKE PLEASE EDIT THIS I THINK PUTTING LUKA HERE WOULD BE GREAT
 
@@ -551,27 +637,135 @@ superstar_vs_avg %>%
   geom_line(aes(y = superstar_avg, group = 1, color = "Star (90th percentile)"), linewidth = 1.2) +
   geom_point(aes(y = league_avg, color = "League Average"), size = 3) +
   geom_point(aes(y = superstar_avg, color = "Superstar (90th Pct)"), size = 3) +
+  geom_line(data = luka, aes(y = PTS, group = 1, color = "Luka Dončić"), linewidth = 1.2) +
+  geom_point(data = luka, aes(y = PTS, groop = 1, color = "Luka Dončić"), size = 3) +
   scale_color_manual(values = c(
     "League avg" = "purple",
-    "Star (90th percentile)" = "green"
+    "Star (90th percentile)" = "green",
+    "Luka Dončić" = "blue"
   )) +
   labs(title = "Stars vs League average scoring by season 2020-2025",
        subtitle = "Stars defined as 90th percentile scorers each season",
        x = "Season", y = "Points per game", color = "")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+    ## Warning in geom_point(data = luka, aes(y = PTS, groop = 1, color = "Luka
+    ## Dončić"), : Ignoring unknown aesthetics: groop
+
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ### How has Luka Doncic developed season to season?
 
+# he is extremely consistent despite being traded
+
 ``` r
-# placeholder
+### goat switched teams, using TOT row only for 24-25 season
+
+luka_clean <- luka %>%
+  filter(!(SEASON == "2024-25" & TEAM_ABBREVIATION %in% c("DAL", "LAL")))
+
+ggplot(luka_clean, aes(x = SEASON)) +
+  
+  # pts
+  geom_line(aes(y = PTS, group = 1, color = "Points"), linewidth = 1.2) +
+  geom_point(aes(y = PTS, color = "Points"), size = 3) +
+  
+  # rb
+  geom_line(aes(y = REB, group = 1, color = "Rebounds"), linewidth = 1.2) +
+  geom_point(aes(y = REB, color = "Rebounds"), size = 3) +
+  
+  # ast
+  geom_line(aes(y = AST, group = 1, color = "Assists"), linewidth = 1.2) +
+  geom_point(aes(y = AST, color = "Assists"), size = 3) +
+  
+  # stl
+  geom_line(aes(y = STL, group = 1, color = "Steals"), linewidth = 1.2) +
+  geom_point(aes(y = STL, color = "Steals"), size = 3) +
+  
+  # fg %
+  geom_line(aes(y = FG_PCT * 100, group = 1, color = "FG % (x100)"), 
+            linewidth = 1.2) +
+  geom_point(aes(y = FG_PCT * 100, color = "FG % (x100)"), size = 3) +
+  
+  scale_color_manual(values = c(
+    "Points" = "blue", 
+    "Rebounds" = "orange", 
+    "Assists" = "green", 
+    "Steals" = "red",
+    "FG % (x100)" = "grey"
+  )) +
+  labs(
+    title = "Luka Dončić: Stats over time",
+    y = "Average Per Game",
+    color = "Stat"
+  )
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ### How do Luka’s stats compare to league averages each season? How about compared to the MVP’s of those seasons?
 
 ``` r
-# placeholder
+league_avg <- master %>%
+  group_by(SEASON) %>%
+  summarise(across(c(PTS, REB, AST, STL, FG_PCT), mean, na.rm = TRUE)) %>%
+  pivot_longer(cols = -SEASON, names_to = "Metric", values_to = "Value") %>%
+  mutate(Source = "League Average")
 ```
+
+    ## Warning: There was 1 warning in `summarise()`.
+    ## ℹ In argument: `across(c(PTS, REB, AST, STL, FG_PCT), mean, na.rm = TRUE)`.
+    ## ℹ In group 1: `SEASON = "2020-21"`.
+    ## Caused by warning:
+    ## ! The `...` argument of `across()` is deprecated as of dplyr 1.1.0.
+    ## Supply arguments directly to `.fns` through an anonymous function instead.
+    ## 
+    ##   # Previously
+    ##   across(a:b, mean, na.rm = TRUE)
+    ## 
+    ##   # Now
+    ##   across(a:b, \(x) mean(x, na.rm = TRUE))
+
+``` r
+# MVP line from master set
+mvp_data <- master %>%
+  filter(
+    (PLAYER_NAME == "Nikola Jokić" & SEASON %in% c("2020-21", "2021-22", "2023-24")) |
+    (PLAYER_NAME == "Joel Embiid" & SEASON == "2022-23") |
+    (PLAYER_NAME == "Shai Gilgeous-Alexander" & SEASON == "2024-25")
+  ) %>%
+  select(SEASON, PTS, REB, AST, STL, FG_PCT) %>%
+  pivot_longer(cols = -SEASON, names_to = "Metric", values_to = "Value") %>%
+  mutate(Source = "Season MVP")
+
+# Luka from his dataset (TOT row)
+luka_data <- luka %>%
+  filter(TEAM_ABBREVIATION == "TOT" | SEASON != "2024-25") %>%
+  select(SEASON, PTS, REB, AST, STL, FG_PCT) %>%
+  pivot_longer(cols = -SEASON, names_to = "Metric", values_to = "Value") %>%
+  mutate(Source = "Luka Doncic")
+
+# combining data and plotting
+all_stats <- bind_rows(league_avg, mvp_data, luka_data)
+
+ggplot(all_stats, aes(x = SEASON, y = Value, group = Source, color = Source)) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  facet_wrap(~Metric, scales = "free_y") +
+  scale_x_discrete(labels = c(
+    "2020-21" = "21'", 
+    "2021-22" = "22'", 
+    "2022-23" = "23'", 
+    "2023-24" = "24'", 
+    "2024-25" = "25'"
+  )) +
+  scale_color_manual(values = c("gray", "blue", "gold"))+
+  labs(title = "Luka vs. League Average vs. MVPs", y = "Stat Value")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- --> \## Luka
+takes a lot of very difficult 3 point shots by himself to try and save
+the offense, this makes his FG_PCT appear weaker than it is. Otherwise,
+he is consistently playing at an MVP level and getting ROBBED
 
 ## Conclusion
