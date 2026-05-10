@@ -268,7 +268,7 @@ ggplot(top_ast, aes(x = SEASON, y = factor(Rank, levels = 5:1),
 
 ### How has the league's reliance on the three-point shot changed?
 
-Throughout the past 5 seasons for three-point shooting has remained relatively the same, but we can see some changes in the graph. While the 2020-2021 season has the highest Q3 out of all the seasons, we can see that surprisingly the 2023-2024 season has the highest average three-point percentage. Another trend is while the means have stayed mostly the same, the Q1 and Q3 for this most recent season has tightened up menaing more players have a three-point percentage closer to the average.
+Throughout the past 5 seasons for three-point shooting has remained relatively the same, but we can see some changes in the graph. While the 2020-2021 season has the highest Q3 out of all the seasons, we can see that surprisingly the 2023-2024 season has the highest average three-point percentage. Another trend is while the means have stayed mostly the same, the Q1 and Q3 for this most recent season has tightened up meaning more players have a three-point percentage closer to the average.
 
 ```{r}
 master %>%
