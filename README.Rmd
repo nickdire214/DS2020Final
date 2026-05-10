@@ -18,7 +18,7 @@ In pursuit of the goal stated above, we will explore the following questions:
 
 2. Which players are the most efficient scorers? How does scoring volume relate to shooting efficiency?
 
-3. Who are the top 10 scorers, rebounders, and assisters each season, and how much turnover is there in those lists year over year?
+3. Who are the top 5 scorers, rebounders, and assisters each season, and how much turnover is there in those lists year over year?
 
 4. How has the league's reliance on the three-point shot changed across the 5 seasons?
 
@@ -192,7 +192,7 @@ master %>%
 
 ### Which players are the most efficient scorers?
 
-First we must answer the question of what makes an "efficient" scorer, these are players who score the most points while maintaining high shooting percentages. We can filter out the players with less than 15 points per game since we're looking for those most efficient. We have thrown in Luka Dončić as well for frame of reference for greatness.
+First we must answer the question of what makes an "efficient" scorer, these are players who score the most points while maintaining high shooting percentages. We can filter out the players with less than 15 points per game since we're looking for those most efficient. We have highlighted Luka Dončić as well for frame of reference for greatness.
 
 ```{r}
 library(ggrepel) 
@@ -201,7 +201,7 @@ master %>%
   filter(PTS >= 15) %>%
   mutate(highlight = case_when(
     PLAYER_NAME == "Luka Dončić" ~ "Luka Dončić",
-    PTS > 25 & FG_PCT > 0.50 ~ "Elite volume and efficiency",
+    PTS > 25 & FG_PCT > 0.50 ~ "High efficiency scorers",
     TRUE ~ "Other"
   )) %>%
   ggplot(aes(x = FG_PCT, y = PTS, color = highlight)) +
@@ -213,17 +213,57 @@ master %>%
   ) +
   scale_color_manual(values = c(
     "Other" = "gray",
-    "Elite volume and efficiency" = "red",
+    "High efficiency scorers" = "red",
     "Luka Dončić" = "blue"
   )) +
   labs(title = "Points per game vs Field Goal Percentage — 2020-2025",
        x = "Field Goal Percentage", y = "Points per game")
 ```
 
-### Who are the top 10 scorers, rebounders, and assisters each season?
+### Who are the top 5 scorers, rebounders, and assisters each season?
 
-```{r}
-# placeholder
+We've covered who is the most efficient scorers, now we'll look at the top scorers, rebounders, and assisters. We can see Luka, among other stars, dominating the points leaderboard which is to be expected, what most people don't know is who is the best of the best for the other categories. People like Nikola Jokić and Rudy Gobert are the top players for rebounds, while players who have elite assist numbers are Trae Young, Nikola Jokić again, and the one and only, Luka Dončić.
+
+```{r top_5_basic, fig.width=10, fig.height=4, warning=FALSE, message=FALSE}
+library(stringr)
+top_pts <- master %>%
+  group_by(SEASON) %>%
+  slice_max(PTS, n = 5, with_ties = FALSE) %>%
+  mutate(Rank = row_number()) %>%
+  ungroup()
+
+ggplot(top_pts, aes(x = SEASON, y = factor(Rank, levels = 5:1), 
+  label = paste0(str_wrap(PLAYER_NAME, width = 12), "\n", round(PTS, 1)))) +
+  geom_tile(fill = "skyblue", color = "white") +
+  geom_text(size = 3.5, fontface = "bold") +
+  labs(title = "Top 5 Scorers Each Season", x = "", y = "Rank") +
+  theme(legend.position = "none", panel.grid = element_blank())
+
+top_reb <- master %>%
+  group_by(SEASON) %>%
+  slice_max(REB, n = 5, with_ties = FALSE) %>%
+  mutate(Rank = row_number()) %>%
+  ungroup()
+
+ggplot(top_reb, aes(x = SEASON, y = factor(Rank, levels = 5:1), 
+  label = paste0(str_wrap(PLAYER_NAME, width = 12), "\n", round(REB, 1)))) +
+  geom_tile(fill = "violet", color = "white") +
+  geom_text(size = 3.5, fontface = "bold") +
+  labs(title = "Top 5 Rebounders Each Season", x = "", y = "Rank") +
+  theme(legend.position = "none", panel.grid = element_blank())
+
+top_ast <- master %>%
+  group_by(SEASON) %>%
+  slice_max(AST, n = 5, with_ties = FALSE) %>%
+  mutate(Rank = row_number()) %>%
+  ungroup()
+
+ggplot(top_ast, aes(x = SEASON, y = factor(Rank, levels = 5:1), 
+  label = paste0(str_wrap(PLAYER_NAME, width = 12), "\n", round(AST, 1)))) +
+  geom_tile(fill = "orange", color = "white") +
+  geom_text(size = 3.5, fontface = "bold") +
+  labs(title = "Top 5 Assisters Each Season", x = "Season", y = "Rank") +
+  theme(legend.position = "none", panel.grid = element_blank())
 ```
 
 ### How has the league's reliance on the three-point shot changed?
@@ -394,13 +434,9 @@ superstar_vs_avg %>%
   geom_line(aes(y = superstar_avg, group = 1, color = "Star (90th percentile)"), linewidth = 1.2) +
   geom_point(aes(y = league_avg, color = "League Average"), size = 3) +
   geom_point(aes(y = superstar_avg, color = "Superstar (90th Pct)"), size = 3) +
-  geom_line(data = luka, aes(y = PTS, group = 1, color = "Luka Dončić"), linewidth = 1.2) +
-  geom_point(data = luka, aes(y = PTS, color = "Luka Dončić", size = 3)) +
   scale_color_manual(values = c(
     "League avg" = "purple",
-    "Star (90th percentile)" = "green",
-     "Luka Dončić" = "blue"
-
+    "Star (90th percentile)" = "green"
   )) +
   labs(title = "Stars vs League average scoring by season 2020-2025",
        subtitle = "Stars defined as 90th percentile scorers each season",
