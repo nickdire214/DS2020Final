@@ -425,7 +425,7 @@ master_wide %>%
 ```
 
 
-### BLAKE PLEASE EDIT THIS I THINK PUTTING LUKA HERE WOULD BE GREAT
+### Stars vs Avg vs The Don
 
 We define stars as players in the 90th percentile of scoring each season. The difference over time of the heights of the points would suggest the elite are pulling further away from the rest of the league.
 
@@ -458,7 +458,7 @@ superstar_vs_avg %>%
 
 ### How has Luka Doncic developed season to season?
 
-# he is extremely consistent despite being traded
+he is extremely consistent despite being traded
 
 ```{r}
 ### goat switched teams, using TOT row only for 24-25 season
@@ -547,7 +547,15 @@ ggplot(all_stats, aes(x = SEASON, y = Value, group = Source, color = Source)) +
   scale_color_manual(values = c("gray", "blue", "gold"))+
   labs(title = "Luka vs. League Average vs. MVPs", y = "Stat Value")
 ```
-## Luka takes a lot of very difficult 3 point shots by himself to try and save the offense, this makes his FG_PCT appear weaker than it is. Otherwise, he is consistently playing at an MVP level and getting ROBBED
+Luka takes a lot of very difficult 3 point shots by himself to try and save the offense, this makes his FG_PCT appear weaker than it is. Otherwise, he is consistently playing at an MVP level and getting ROBBED
 
 
 ## Conclusion
+
+In conclusion, our analysis of the NBA as a whole and individuals has shown that just giving an eye test won't answer all questions. Looking into the data had helped us all look at the NBA a bit different with more insight on trends. The reality of the NBA is that when comparing players, there really aren't two of the same player, especially the ones near stardom. Comparing average players is a completely different game then comparing the best of the best.
+
+We found it super interesting that for the plus/minus comparisons, that nearly the entire starting roster for the Thunder was present. With Shai top right, and his teammates top left. Meaning that he did the heavy lifting in scoring and his team really didn't get all that many chances around him. 
+
+We also think it was a great idea to have a specific player be a baseline by himself, Luka Doncic. The stats tell a pretty good story, that mvp's aren't only stat reliant, players like himself honestly can't really be compared to many others if any, and that he is maybe the most robbed player of all time.
+
+If we were to do any future research on the NBA, team statistics would be the way to go. We did a major focus on individual performances and neglected team activity. Which we don't think is necessarily a good or bad decision, but was at least a good focus for the project.
